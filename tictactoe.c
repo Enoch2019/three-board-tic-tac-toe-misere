@@ -53,7 +53,7 @@ int main(void) {
 
     Game game = createGame();
 
-    printf("Hello World!");
+    printf("Hello World!\n");
 
     destroyGame(game);
 
@@ -76,6 +76,8 @@ Game createGame(void) {
 
     current->next = NULL;
     newGame->nBoards = 3;
+
+    return newGame;
 }
 
 void destroyGame(Game game) {
@@ -125,7 +127,7 @@ Board createBoard(void) {
 
         previous->down->right = current->down;
         previous->down->down->right = current->down->down;
-        current->down->down->down = NULL;
+        previous->down->down->down = NULL;
 
         previous = current;
         current = current->right;
@@ -137,7 +139,7 @@ Board createBoard(void) {
     previous->right = NULL;
     previous->down->right = NULL;
     previous->down->down->right = NULL;
-    current->down->down->down = NULL;
+    previous->down->down->down = NULL;
 
     newBoard->topLeft = topLeft;
     newBoard->topRight = topLeft->right->right;
