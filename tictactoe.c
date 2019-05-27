@@ -15,7 +15,7 @@ typedef struct game {
     // number of boards
     // note: this element is only for future implementations
     int nBoards;
-    // 0 is human player, 1 is computer
+    // 0 is human player, 1 is computer/second player
     int playerTurn;
 
 } * Game;
@@ -25,8 +25,6 @@ typedef struct board {
     struct board * next;
     
     struct square * topLeft;
-    struct square * topRight;
-    struct square * bottomLeft;
 
     // 0 for playable 1 for unplayable
     int boardState;
@@ -48,6 +46,10 @@ void runGame(Game game);
 void endGame(Game game);
 void playAgain(void);
 
+void gameStatus(Game game);
+//If board is dead than changes boardStatus to 1;
+void boardStatus(Board board);
+
 void playerMove(Game game);
 
 void drawBoard(Game game);
@@ -60,6 +62,8 @@ Square createSquare(void);
 
 void destroyGame(Game game);
 void destroyBoard(Board board);
+
+int numberString(char * input);
 
 int main(void) {
 
@@ -125,8 +129,11 @@ void intialiseGame(Game game) {
 void runGame(Game game) {
 
     while (game->gameState != game->nBoards) {
-        game->gameState  = 3;
+
+        gameStatus(game);   
         drawBoard(game);
+        game->gameState = 3;
+
     }
 
 }
@@ -152,6 +159,7 @@ void playAgain(void) {
         printf("Please take a break.");
         printf("Exiting game.\n");
         printf("Goodbye. Stay Healthy.\n");
+        return;
     }
 
     int tries = 0;
@@ -196,6 +204,144 @@ void playAgain(void) {
     return;
 }
 
+void playerMove(Game game) {
+
+    Board selectBoard;
+    int i = 0;
+
+    for (int i = 0; i < 3; i++) {
+        
+        printf("What board do you want to play on?\n");
+        char *input;
+        fgets(input, 32, stdin);
+        int number = numberString(input);
+
+        switch (number) {
+                
+        }
+
+    }
+}
+
+void gameStatus(Game game) {
+    
+    Board currentBoard = game->head;
+    game->gameState = 0;
+
+    while (currentBoard != NULL) {
+
+        if (currentBoard->boardState == 0) {
+            boardStatus(currentBoard);
+        }
+        if (currentBoard->boardState == 1) {
+            game->gameState++;
+        }
+
+        currentBoard = currentBoard->next;
+    }
+
+    return;
+}
+
+void boardStatus(Board board) {
+
+    Square currentRow = board->topLeft;
+
+    //Checking horizontal 3 in a row;
+
+    while (currentRow != NULL) {
+
+        Square currentColumn = currentRow;
+
+        for (int i = 0; currentColumn != NULL; ) {
+
+            if (currentRow->sqrStatus == 1) {
+                i++;
+            }
+
+            if (i == 3) {
+
+                board->boardState = 1;
+                return;
+            }
+
+            currentColumn = currentColumn->right;
+        }
+
+        currentRow = currentRow->down;
+    }
+    
+    Square currentColumn = board->topLeft;
+
+    //Check verticle 3 in a row;
+
+    while (currentColumn != NULL) {
+
+        currentRow = currentColumn;
+
+        for (int i = 0; currentRow != NULL; ) {
+
+            if (currentRow->sqrStatus == 1) {
+                i++;
+            }
+
+            if (i == 3) {
+
+                board->boardState = 1;
+                return;
+            }
+
+            currentRow = currentRow->down;
+        }
+
+        currentColumn = currentColumn->right;
+    }
+
+    //Check diagonal 3 in a row;
+    
+    Square currentSquare = board->topLeft;
+
+    for (int j = 0; currentSquare != NULL; ) {
+
+        if (currentSquare->sqrStatus == 1) {
+            j++;
+        }
+
+        if (j == 3) {
+
+            board->boardState = 1;
+            return;
+        }
+
+        if (currentSquare->right != NULL) {
+            currentSquare = currentSquare->down->right;
+        } else {
+            currentSquare = NULL;
+        }
+    }
+    int j = 0;
+
+    currentSquare = board->topLeft;
+
+    if (currentSquare->right->right->sqrStatus == 1) {
+        j++;
+    }
+    if (currentSquare->right->down->sqrStatus == 1) {
+        j++;
+    }
+    if (currentSquare->down->down->sqrStatus == 1) {
+        j++;
+    }
+
+    if (j == 3) {
+        board->boardState = 1;
+        return;
+    }
+
+    return;
+}
+
+
 void drawBoard(Game game) {
 
     printf("\n");
@@ -210,10 +356,9 @@ void drawBoard(Game game) {
     printf("  -+-+-+-    -+-+-+-    -+-+-+-    \n");
     
     Board currentBoard = game->head;
-    int i = 0;
     char row = 'A';
 
-    while (i < 9) {
+    for (int i = 0; i < 9; i++) {
 
         Square currentSquare = currentBoard->topLeft;
 
@@ -239,7 +384,6 @@ void drawBoard(Game game) {
             currentBoard = game->head;
         }
 
-        i++;
     }
 
     printf("\n");
@@ -332,11 +476,9 @@ Board createBoard(void) {
         current->down->down = createSquare();
         current->right = createSquare();
 
-        if (i != 0) {
-            previous->down->right = current->down;
-            previous->down->down->right = current->down->down;
-            previous->down->down->down = NULL;
-        }
+        previous->down->right = current->down;
+        previous->down->down->right = current->down->down;
+        previous->down->down->down = NULL;
 
         previous = current;
         current = current->right;
@@ -352,9 +494,6 @@ Board createBoard(void) {
     previous->down->down->down = NULL;
 
     newBoard->topLeft = topLeft;
-    newBoard->topRight = topLeft->right->right;
-    newBoard->bottomLeft = topLeft->down->down;
-
     newBoard->boardState = 0;
 
     return newBoard;
@@ -409,4 +548,22 @@ void destroyBoard(Board board) {
     free(board);
 
     return;
+}
+
+//Takes input from stdin and returns first integer in string
+//Return -1 if no integer is found
+int numberString(char * input) {
+
+    //Assuming there will always be a '\n' terminating the string
+    //Max length for input will be 32
+    for (int i = 0; i < 32; i++) {
+
+        if ('1' <= input[i] && input[i] <= '3') {
+
+            int number = input[i] - '0';
+            return number;
+        }
+        
+    }
+    return -1;
 }
