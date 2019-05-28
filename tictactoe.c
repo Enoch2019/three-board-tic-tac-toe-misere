@@ -51,6 +51,8 @@ void gameStatus(Game game);
 void boardStatus(Board board);
 
 void playerMove(Game game);
+Board selectBoard(Game game);
+Square selectSquare(Board board);
 
 void drawBoard(Game game);
 void printRow(Square firstSquare, char row);
@@ -64,6 +66,7 @@ void destroyGame(Game game);
 void destroyBoard(Board board);
 
 int numberString(char * input);
+int abcString(char * input);
 
 int main(void) {
 
@@ -130,16 +133,22 @@ void runGame(Game game) {
 
     while (game->gameState != game->nBoards) {
 
-        gameStatus(game);   
         drawBoard(game);
-        game->gameState = 3;
+        playerMove(game);
+        gameStatus(game);
 
     }
+
+    drawBoard(game);
 
 }
 
 void endGame(Game game) {
 
+    printf("Player %d wins.\n", game->playerTurn + 1);
+    printf("Sorry Player %d. Better luck next time.\n", game->playerTurn + 1);
+
+    /*
     if (game->playerTurn == 0) {
 
         printf("Sorry. You lose.\n");
@@ -147,6 +156,7 @@ void endGame(Game game) {
 
         printf("Congratulations. You Win.\n");
     }
+    */
 }
 
 void playAgain(void) {
@@ -206,22 +216,90 @@ void playAgain(void) {
 
 void playerMove(Game game) {
 
-    Board selectBoard;
-    int i = 0;
+    printf("Player %d turn.\n", game->playerTurn + 1);
 
-    for (int i = 0; i < 3; i++) {
+    Board board = selectBoard(game);
+
+    while (board->boardState == 1) {
+        printf("Sorry. That board is dead. Please choose another one.\n");
+        board = selectBoard(game);
+    }
+
+    Square square = selectSquare(board);
+
+    while (square->sqrStatus == 1) {
+        printf("Sorry. That square already has an X in it. Please choose another one.\n");
+        square = selectSquare(board);
+    }
+
+    square->sqrStatus = 1;
+    
+    game->playerTurn = (game->playerTurn == 1) ? 0 : 1;
+
+    return;
+}
+
+Board selectBoard(Game game) {
+
+    Board selectBoard = game->head;
+
+    int number = -1;
+
+    while (number == -1) {
         
         printf("What board do you want to play on?\n");
-        char *input;
+        char input[32];
         fgets(input, 32, stdin);
-        int number = numberString(input);
+        number = numberString(input);
 
-        switch (number) {
-                
+        if (number == -1) {
+            printf("Sorry. I do not understand.\n");
         }
+    }
+
+    for (int i = 1; i < number; i++) {
+
+        selectBoard = selectBoard->next;
 
     }
+
+    return selectBoard;
 }
+
+Square selectSquare(Board board) {
+
+    Square selectSquare = board->topLeft;
+
+    int number = -1;
+    int abc = -1;
+
+    while (number == -1 || abc == -1) {
+        
+        printf("What square do you want to play on?\n");
+        char input[32];
+        fgets(input, 32, stdin);
+        number = numberString(input);
+        abc = abcString(input);
+
+        if (number == -1 || abc == -1) {
+            printf("Sorry. I do not understand.\n");
+        }
+    }
+
+    for (int i = 1; i < number; i++) {
+
+        selectSquare = selectSquare->right;
+
+    }
+
+    for (int i = 1; i < abc; i++) {
+
+        selectSquare = selectSquare->down;
+
+    }
+
+    return selectSquare;
+} 
 
 void gameStatus(Game game) {
     
@@ -255,7 +333,7 @@ void boardStatus(Board board) {
 
         for (int i = 0; currentColumn != NULL; ) {
 
-            if (currentRow->sqrStatus == 1) {
+            if (currentColumn->sqrStatus == 1) {
                 i++;
             }
 
@@ -270,7 +348,7 @@ void boardStatus(Board board) {
 
         currentRow = currentRow->down;
     }
-    
+
     Square currentColumn = board->topLeft;
 
     //Check verticle 3 in a row;
@@ -319,6 +397,7 @@ void boardStatus(Board board) {
             currentSquare = NULL;
         }
     }
+
     int j = 0;
 
     currentSquare = board->topLeft;
@@ -362,18 +441,12 @@ void drawBoard(Game game) {
 
         Square currentSquare = currentBoard->topLeft;
 
-        if (i == 3) {
+        if (i >= 6) {
 
-            printf("\n");
-            printf("  -+-+-+-    -+-+-+-    -+-+-+-    \n");
-            currentSquare = currentSquare->down;
-            row += 1;
-        } else if (i == 6) {
-
-            printf("\n");
-            printf("  -+-+-+-    -+-+-+-    -+-+-+-    \n");
             currentSquare = currentSquare->down->down;
-            row += 1;
+        } else if (i >= 3) {
+
+            currentSquare = currentSquare->down;
         }
         
         printRow(currentSquare, row);
@@ -381,7 +454,10 @@ void drawBoard(Game game) {
 
         if (currentBoard == NULL) {
 
+            row += 1;
             currentBoard = game->head;
+            printf("\n");
+            printf("  -+-+-+-    -+-+-+-    -+-+-+-    \n");
         }
 
     }
@@ -556,7 +632,7 @@ int numberString(char * input) {
 
     //Assuming there will always be a '\n' terminating the string
     //Max length for input will be 32
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < 32 && input[i] != '\n'; i++) {
 
         if ('1' <= input[i] && input[i] <= '3') {
 
@@ -564,6 +640,26 @@ int numberString(char * input) {
             return number;
         }
         
+    }
+    return -1;
+}
+
+//Takes input from stdin and returns first a/b/c as 1/2/3 respectfully in string
+//Return -1 otherwise.
+int abcString(char * input) {
+    //Assuming there will always be a '\n' terminating the string
+    //Max length for input will be 32
+    for (int i = 0; i < 32 && input[i] != '\n'; i++) {
+
+        if ('a' <= input[i] && input[i] <= 'c') {
+
+            int abc = input[i] - ('a' - 1);
+            return abc;
+        } else if ('A' <= input[i] && input[i] <= 'C') {
+
+            int abc = input[i] - ('A' - 1);
+            return abc;
+        }
     }
     return -1;
 }
