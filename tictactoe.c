@@ -1,6 +1,6 @@
 //Written by Enoch K (enoch7225@gmail.com)
 //Project started: 2019-05-25
-//Project finished:
+//Project finished: 2019-05-30
 //Three board Tic Tac Toe Misere
 
 #include <stdio.h>
@@ -15,7 +15,7 @@ typedef struct game {
     // number of boards
     // note: this element is only for future implementations
     int nBoards;
-    // 0 is human player, 1 is computer/second player
+    // 0 is first player, 1 is second player.
     int playerTurn;
 
 } * Game;
@@ -71,7 +71,6 @@ int abcString(char * input);
 int main(void) {
 
     Game game = createGame();
-    intialiseGame(game);
     runGame(game);
     endGame(game);
     destroyGame(game);
@@ -148,15 +147,6 @@ void endGame(Game game) {
     printf("Player %d wins.\n", game->playerTurn + 1);
     printf("Sorry Player %d. Better luck next time.\n", game->playerTurn + 1);
 
-    /*
-    if (game->playerTurn == 0) {
-
-        printf("Sorry. You lose.\n");
-    } else if (game->playerTurn == 1) {
-
-        printf("Congratulations. You Win.\n");
-    }
-    */
 }
 
 void playAgain(void) {
@@ -164,7 +154,7 @@ void playAgain(void) {
     static int nGames = 0;
     nGames++;
 
-    if (nGames == 16) {
+    if (nGames == 100) {
         printf("Sorry. You have played too many games.\n");
         printf("Please take a break.");
         printf("Exiting game.\n");
@@ -652,7 +642,7 @@ int abcString(char * input) {
     for (int i = 0; i < 32 && input[i] != '\n'; i++) {
 
         if ('a' <= input[i] && input[i] <= 'c') {
-
+            
             int abc = input[i] - ('a' - 1);
             return abc;
         } else if ('A' <= input[i] && input[i] <= 'C') {
