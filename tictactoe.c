@@ -1,4 +1,4 @@
-//Written by Enoch K (enoch7225@gmail.com)
+//Written by Enoch K
 //Project started: 2019-05-25
 //Project finished: 2019-05-30
 //Three board Tic Tac Toe Misere
